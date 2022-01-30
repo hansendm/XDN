@@ -1,0 +1,1 @@
+An XDN logo animation using border-radius and unsplash image with SCSS, Pug. #cpc-blob #codepenchallenge
