@@ -17,16 +17,21 @@ crypto_address_patterns["monero"] = "4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}"
 crypto_address_patterns["dash"] = "X[1-9A-HJ-NP-Za-km-z]{33}"
 
 cryptocoin_flag = "g"
-crypto_addresses_found = {}
 
-
+#crypto_addresses_found[cryptocurrency_name][address]=[list_of_filepaths]
+crypto_addresses_found = {}	
 
 word_counts = {}
+#file_type_catelog[file_type_extension]=[filepath] 
 file_type_catelog = {}
+#word_matched_image_files[file_type_extension][keyword] = [filepath]
 word_matched_image_files = {}
+#other_image_files[file_type_extension][keyword] = [filepath]
 other_image_files = {}
+#word_matched_filenames[file_type_extension][keyword] = [filepath]
 word_matched_filenames = {}
-word_matched_files = {} 	#word_matched_files[nw]=[filepath]
+#word_matched_files[nw]=[filepath]
+word_matched_files = {} 	
 word_substitutions = {}
 
 #predefined variables
@@ -81,76 +86,30 @@ def select_directories():
 	directory = select_directory("Enter target directory:")
 	result_directory = select_directory("Enter result folder destination:")
 
+def create_new_dir(parent_dir,name):
+	new_dir = os.path.join(parent_dir,name)
+	try:
+		os.mkdir(new_dir,mode=755)
+	except OSError as e:
+		if e.errno == errno.EEXIST:
+			print(new_dir)
+			print('Directory already exists')
+		else:
+			raise
+	return new_dir
+
 def define_directories():
-	result_dir = os.path.join(result_directory,'results')
-	file_type_list_dir = os.path.join(result_directory,'results','file_type_lists')
-	filename_word_match_list_dir = os.path.join(result_directory,'results','filename_word_match_lists')
-	wordsearch_file_list_dir = os.path.join(result_directory,'results','wordsearch_file_lists')
-	word_matched_image_list_dir = os.path.join(result_directory,'results','word_matched_image_lists')
-	other_image_list_dir = os.path.join(result_directory,'results','other_image_lists')
-	crypto_addresses_dir = os.path.join(result_directory,'results','crypto_addresses') 
-
-
-def create_result_directories():
-	# create result directories
-	try:
-		os.mkdir(file_type_list_dir,mode=755)
-	except OSError as e:
-		if e.errno == errno.EEXIST:
-			print(file_type_list_dir)
-			print('Directory already exists')
-		else:
-			raise
-
-	try:
-		os.mkdir(filename_word_match_list_dir,mode=755)
-	except OSError as e:
-		if e.errno == errno.EEXIST:
-			print(filename_word_match_list_dir)
-			print('Directory already exists')
-		else:
-			raise
-
-	try:
-		os.mkdir(wordsearch_file_list_dir,mode=755)
-	except OSError as e:
-		if e.errno == errno.EEXIST:
-			print(wordsearch_file_list_dir)
-			print('Directory already exists')
-		else:
-			raise
-			
-	try:
-		os.mkdir(word_matched_image_list_dir,mode=755)
-	except OSError as e:
-		if e.errno == errno.EEXIST:
-			print(word_matched_image_list_dir)
-			print('Directory already exists')
-		else:
-			raise
-
-	try:
-		os.mkdir(other_image_list_dir,mode=755)
-	except OSError as e:
-		if e.errno == errno.EEXIST:
-			print(other_image_list_dir)
-			print('Directory already exists')
-		else:
-			raise
-			
-	try:
-		os.mkdir(crypto_addresses_dir,mode=755)
-	except OSError as e:
-		if e.errno == errno.EEXIST:
-			print(crypto_addresses_dir)
-			print('Directory already exists')
-		else:
-			raise
+	result_dir = create_new_dir(result_directory,'results')
+	file_type_list_dir = create_new_dir(result_dir,'file_type_lists')
+	filename_word_match_list_dir = create_new_dir(result_dir','filename_word_match_lists')
+	wordsearch_file_list_dir = create_new_dir(result_dir,'wordsearch_file_lists')
+	word_matched_image_list_dir = create_new_dir(result_dir,'word_matched_image_lists')
+	other_image_list_dir = create_new_dir(result_dir,'other_image_lists')
+	crypto_addresses_dir = create_new_dir(result_dir,'crypto_addresses') 
 
 def new_project():
 	select_directories()
 	define_directories()
-	create_result_directories()
 	modify_keywords()
 	wordsearch_directory(directory,list_of_words)
 	search_crypto_addresses()
@@ -162,17 +121,6 @@ def new_project():
 	# define_directories()
 	# pull_dict_values_from_results()
 
-def create_cryptocurrency_dirs(name):
-	cryptocurrency_dir = os.path.join(crypto_addresses_dir,name)
-	try:
-		os.mkdir(cryptocurrency_dir,mode=755)
-	except OSError as e:
-		if e.errno == errno.EEXIST:
-			print(cryptocurrency_dir)
-			print('Directory already exists')
-		else:
-			raise
-	return cryptocurrency_dir
 	
 def search_crypto_addresses():
 	print("Starting to search for Cryptocurrency Addresses...")
@@ -190,12 +138,12 @@ def search_crypto_addresses():
 								crypto_addresses_found[c][m].append(filepath)
 							else:
 								crypto_addresses_found[c][m] = [filepath]
-						#crypto_addresses_found[cryptocurrency_name][address]=[list_of_filepaths]
+						
 	print("Cryptocurrency Address Search Complete.")
 	print("---------------------------------------")
 	for k in crypto_addresses_found.keys():
 		print('    %-7s %d' %(k,len(crypto_addresses_found[k])))
-		cryptocurrency_dir = create_cryptocurrency_dirs(k)
+		cryptocurrency_dir = create_new_dir(crypto_addresses_dir,k)
 		for kk in crypto_addresses_found[k].keys():
 			print('        %' %(kk))
 			save_dict_values_by_keys(crypto_addresses_found[k],cryptocurrency_dir)
@@ -291,7 +239,7 @@ def replace_pattern_in_string(original_str,text, subs, flags=0):
 def match_filenames(file_list, list_of_words):
 	returning_dictionary = {}
 	for x in list_of_words:
-		li = [y for y in get_close_matches(x,sp,n=1000000000,cutoff=0.1) if x in y]
+		li = [y for y in get_close_matches(file_list) if x in y]
 		if len(li)>0:
 			returning_dictionary[x] = li 		
 	return returning_dictionary
@@ -311,7 +259,7 @@ def wordsearch_dict_filename_lists():
 			matched_dict = match_filenames(file_type_catelog[k],list_of_words)
 			if len(matched_dict)>0:
 				word_matched_filenames[k] = matched_dict
-				#word_matched_filenames[file_type_extension][keyword] = [list_of_close_matches]
+				
 	return
 
 		
@@ -339,7 +287,7 @@ def catelog_files(directory):
 			extension = filename.split(".")[-1]
 			if extension not in file_type_catelog.keys():
 				file_type_catelog[extension] = []
-			file_type_catelog[extension].append(filepath)
+			file_type_catelog[extension].append(filepath) 
 	print("Files Cateloged:")
 	for k in file_type_catelog.keys():
 		print('    %-7s %d' %(k,len(file_type_catelog[k])))
@@ -381,14 +329,25 @@ def wordsearch_directory(directory,list_of_words):
 	wordsearch_dict_filename_lists()
 	print("Filename Word Search Complete.")
 	print("Saving List of Image Filenames with mached words..")
-	save_dict_values_by_keys(word_matched_image_files,word_matched_image_list_dir)
+	#-----------------------------------------------------
+	#dictionary[file_type_extension][keyword] = [filepath]
+	# create sub folder for each file type
+	# filepaths with keyword as name
+	for k in word_matched_image_files.keys():
+		file_type_dir = create_new_dir(word_matched_image_list_dir,k)
+		save_dict_values_by_keys(word_matched_image_files[k],file_type_dir)
 	print("Image Filename Match lists saved")
 	print("Saving List of Other Image Filenames..")
-	save_dict_values_by_keys(other_image_files,other_image_list_dir)
+	for k in other_image_files.keys():
+		file_type_dir = create_new_dir(other_image_list_dir,k)
+		save_dict_values_by_keys(other_image_files[k],file_type_dir)
 	print("Other Image Filename lists saved")
 	print("Saving List of other Matched Filenames..")
-	save_dict_values_by_keys(word_matched_filenames,filename_word_match_list_dir)
+	for k in word_matched_filenames.keys():
+		file_type_dir = create_new_dir(filename_word_match_list_dir,k)
+		save_dict_values_by_keys(word_matched_filenames[k],file_type_dir)
 	print("Other Matched Filename lists saved")
+	#-----------------------------------------------------
 	print("----------------------------------")
 	print("Now searching files for matches...")
 	search_files_word_matches()
